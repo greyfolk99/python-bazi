@@ -15,19 +15,19 @@ import numpy as np
 
 OUT = Path(__file__).parent.parent / "bazi/_data/lunar_table_1800_2200.npz"
 _EPOCH_ORD = date(1970, 1, 1).toordinal()
-_JD_EPOCH = 2440587.5  # JD at 1970-01-01 00:00 UTC
+_JD_NOON_1970 = 2440588  # 정수 JD: 1970-01-01 정오 (getFirstJulianDay() 기준)
 
 START_YEAR = 1800
 END_YEAR   = 2201
 
 
-def jd_to_ordinal(jd: float) -> int:
-    """JD → 양력 날짜 ordinal.
+def jd_to_ordinal(jd: int) -> int:
+    """정수 JD(정오 기준) → 양력 날짜 ordinal.
 
-    JD 2440587.5 = 1970-01-01 00:00 UTC → ordinal 719163.
-    floor(jd - 2440587.5)가 1970-01-01부터의 일수이므로 ordinal로 변환.
+    getFirstJulianDay()는 정수 JD를 반환하며, 정수 JD n = n일의 정오.
+    _JD_NOON_1970(2440588) = 1970-01-01 정오이므로 정수 연산으로 정확히 변환.
     """
-    return int(jd - _JD_EPOCH) + _EPOCH_ORD
+    return jd - _JD_NOON_1970 + _EPOCH_ORD
 
 
 def build():
