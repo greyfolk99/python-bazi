@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ __version__ = "0.1.0"
 
 
 def chart(
-    dt: datetime,
+    dt: datetime | date,
     time_basis: str | None = None,
     longitude: float | None = None,
     timezone: str | None = None,
@@ -28,7 +28,7 @@ def chart(
     """생년월일시 → 사주팔자.
 
     Args:
-        dt: 생년월일시 (naive datetime)
+        dt: 생년월일시. datetime이면 시주 포함, date이면 시주 None(삼주).
         time_basis: None (표준시) | 'solar' (진태양시) | 'lunar' (음력 입력)
         longitude: 출생지 경도 (time_basis='solar' 시 필수)
         timezone: IANA 타임존 (time_basis='solar' 시 필수)

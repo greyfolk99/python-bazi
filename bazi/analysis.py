@@ -103,12 +103,13 @@ def analyze(
     """
     effective_lang = lang or config.lang
 
-    pillars_raw = {
+    pillars_raw: dict[str, "Pillar"] = {
         "year": chart.year,
         "month": chart.month,
         "day": chart.day,
-        "hour": chart.hour,
     }
+    if chart.hour is not None:
+        pillars_raw["hour"] = chart.hour
     day_stem_idx = STEMS.index(chart.day.stem)
 
     element_counts: dict[str, int] = {"木": 0, "火": 0, "土": 0, "金": 0, "水": 0}

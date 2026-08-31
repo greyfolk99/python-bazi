@@ -39,6 +39,11 @@ from datetime import datetime, date
 chart = bazi.chart(datetime(1992, 8, 4, 3, 30))
 print(chart)  # 壬申 丁未 壬子 壬寅
 
+# 시주 미상 (date 타입 입력 → 삼주만)
+chart = bazi.chart(date(1992, 8, 4))
+print(chart)  # 壬申 丁未 壬子
+print(chart.hour)  # None
+
 # 음력 입력
 chart = bazi.chart(datetime(1992, 7, 6, 3, 30), time_basis='lunar')
 

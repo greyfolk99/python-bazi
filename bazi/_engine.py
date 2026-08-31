@@ -41,13 +41,17 @@ class BaziChart:
     year: Pillar
     month: Pillar
     day: Pillar
-    hour: Pillar
+    hour: Pillar | None = None
 
     @property
-    def pillars(self) -> tuple[Pillar, Pillar, Pillar, Pillar]:
+    def pillars(self) -> tuple[Pillar, ...]:
+        if self.hour is None:
+            return (self.year, self.month, self.day)
         return (self.year, self.month, self.day, self.hour)
 
     def __str__(self) -> str:
+        if self.hour is None:
+            return f"{self.year} {self.month} {self.day}"
         return f"{self.year} {self.month} {self.day} {self.hour}"
 
 
@@ -89,12 +93,16 @@ class _BaziEngine:
 
     def chart(
         self,
-        dt: datetime,
+        dt: datetime | date,
         time_basis: str | None = None,
         longitude: float | None = None,
         timezone: str | None = None,
     ) -> BaziChart:
+        date_only = not isinstance(dt, datetime)
+
         if time_basis == "solar":
+            if date_only:
+                raise ValueError("time_basis='solar' requires datetime, not date")
             if longitude is None:
                 raise ValueError("longitude required for time_basis='solar'")
             if timezone is None:
@@ -103,16 +111,36 @@ class _BaziEngine:
         elif time_basis == "lunar":
             from ._lunar import lunar_to_solar
             solar_date = lunar_to_solar(dt.year, dt.month, dt.day)
-            chart_dt = dt.replace(year=solar_date.year, month=solar_date.month, day=solar_date.day)
+            if date_only:
+                chart_date = solar_date
+                chart_dt = None
+            else:
+                chart_dt = dt.replace(year=solar_date.year, month=solar_date.month, day=solar_date.day)
+                chart_date = None
         elif time_basis is not None:
             raise ValueError(f"unknown time_basis: {time_basis!r}. Use None, 'solar', or 'lunar'.")
         else:
-            chart_dt = dt
+            chart_dt = None if date_only else dt
+            chart_date = dt if date_only else None
 
-        d_ord = np.array([date(chart_dt.year, chart_dt.month, chart_dt.day).toordinal()], dtype=np.int64)
+        if chart_dt is not None:
+            actual_date = date(chart_dt.year, chart_dt.month, chart_dt.day)
+        else:
+            actual_date = chart_date  # type: ignore[assignment]
+
+        d_ord = np.array([actual_date.toordinal()], dtype=np.int64)
+
+        if date_only or chart_dt is None:
+            yg, yz, mg, mz, dg, dz, _, _ = self.bazi_vectorized(d_ord, np.zeros(1, dtype=np.int64))
+            return BaziChart(
+                year=Pillar(STEMS[yg[0]], BRANCHES[yz[0]]),
+                month=Pillar(STEMS[mg[0]], BRANCHES[mz[0]]),
+                day=Pillar(STEMS[dg[0]], BRANCHES[dz[0]]),
+                hour=None,
+            )
+
         h_arr = np.array([chart_dt.hour], dtype=np.int64)
         yg, yz, mg, mz, dg, dz, hg, hz = self.bazi_vectorized(d_ord, h_arr)
-
         return BaziChart(
             year=Pillar(STEMS[yg[0]], BRANCHES[yz[0]]),
             month=Pillar(STEMS[mg[0]], BRANCHES[mz[0]]),

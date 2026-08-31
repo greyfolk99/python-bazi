@@ -13,6 +13,19 @@ def test_chart_standard():
     assert str(c) == "壬申 丁未 壬子 壬寅"
 
 
+def test_chart_date_no_hour():
+    c = bazi.chart(date(1992, 8, 4))
+    assert c.hour is None
+    assert str(c) == "壬申 丁未 壬子"
+
+
+def test_chart_date_analyze_no_hour():
+    c = bazi.chart(date(1992, 8, 4))
+    r = bazi.analyze(c)
+    assert "hour" not in r.pillars
+    assert sum(r.elements.counts.values()) == 6  # 3기둥 × 2(천간+지지)
+
+
 def test_chart_lunar_equals_solar():
     c_solar = bazi.chart(datetime(1992, 8, 4, 3, 30))
     c_lunar = bazi.chart(datetime(1992, 7, 6, 3, 30), time_basis="lunar")
