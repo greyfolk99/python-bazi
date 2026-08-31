@@ -1,4 +1,4 @@
-"""python-bazi 기본 동작 테스트."""
+"""python-bazi CI 테스트."""
 from datetime import date, datetime
 
 import pytest
@@ -11,6 +11,12 @@ import bazi
 def test_chart_standard():
     c = bazi.chart(datetime(1992, 8, 4, 3, 30))
     assert str(c) == "壬申 丁未 壬子 壬寅"
+
+
+def test_chart_date_no_hour():
+    c = bazi.chart(date(1992, 8, 4))
+    assert c.hour is None
+    assert str(c) == "壬申 丁未 壬子"
 
 
 def test_chart_lunar_equals_solar():
@@ -40,7 +46,6 @@ def test_solar_to_lunar():
 
 
 def test_lunar_leap_month():
-    # 2020 윤4월 1일 → 양력 2020-05-23
     assert bazi.lunar_to_solar(2020, 4, 1, is_leap=True) == date(2020, 5, 23)
 
 
@@ -49,7 +54,7 @@ def test_solar_to_lunar_leap():
     assert (year, month, is_leap) == (2020, 4, True)
 
 
-def test_lunar_roundtrip(tmp_path):
+def test_lunar_roundtrip():
     samples = [
         (1900, 1, 1, False),
         (2000, 6, 15, False),
@@ -75,6 +80,13 @@ def test_analyze_elements(hjseo_chart):
     assert r.elements.dominant == "水"
 
 
+def test_analyze_no_hour():
+    c = bazi.chart(date(1992, 8, 4))
+    r = bazi.analyze(c)
+    assert "hour" not in r.pillars
+    assert sum(r.elements.counts.values()) == 6
+
+
 def test_analyze_day_pillar(hjseo_chart):
     bazi.config.lang = "zh"
     r = bazi.analyze(hjseo_chart)
@@ -86,14 +98,14 @@ def test_analyze_lang_global(hjseo_chart):
     bazi.config.lang = "ko"
     r = bazi.analyze(hjseo_chart)
     assert r.pillars["year"].stem_shi_shen == "비견"
-    bazi.config.lang = "zh"  # restore
+    bazi.config.lang = "zh"
 
 
 def test_analyze_lang_override(hjseo_chart):
     bazi.config.lang = "ko"
     r = bazi.analyze(hjseo_chart, lang="zh")
     assert r.pillars["year"].stem_shi_shen == "比肩"
-    bazi.config.lang = "zh"  # restore
+    bazi.config.lang = "zh"
 
 
 def test_analyze_dayun(hjseo_chart):
@@ -117,7 +129,7 @@ def test_config_env(monkeypatch):
     import bazi._config as cfg
     reload(cfg)
     assert cfg.config.lang == "en"
-    cfg.config.lang = "zh"  # restore
+    cfg.config.lang = "zh"
 
 
 # ── 벡터 연산 ─────────────────────────────────────────────
