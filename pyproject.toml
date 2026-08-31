@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "python-bazi"
-version = "0.1.0"
+name = "fate-py"
+version = "0.2.1"
 description = "Four Pillars of Destiny (BaZi / 사주팔자) engine — pure numpy"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
@@ -14,8 +14,16 @@ build = ["lunar_python"]
 dev   = ["lunar_python", "pytest"]
 
 [project.urls]
-Repository = "https://github.com/greyfolk99/python-bazi"
+Repository = "https://github.com/greyfolk99/fate-py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["bazi"]
-include = ["bazi/_data/*.npz"]
+include = [
+    "bazi/_data/jieqi_*.npz",
+    "bazi/_data/lunar_*.npz",
+]
+exclude = [
+    "bazi/_data/ground_truth_*",
+    "tests/",
+    "scripts/",
+]
