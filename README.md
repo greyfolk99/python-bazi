@@ -83,15 +83,15 @@ BAZI_LANG=ko python my_script.py
 ## 음력 변환
 
 ```python
-from bazi._lunar import lunar_to_solar, solar_to_lunar
+import bazi
 from datetime import date
 
 # 음력 → 양력
-solar = lunar_to_solar(1992, 7, 6)           # date(1992, 8, 4)
-solar = lunar_to_solar(2020, 4, 1, is_leap=True)  # 윤4월
+solar = bazi.lunar_to_solar(1992, 7, 6)           # date(1992, 8, 4)
+solar = bazi.lunar_to_solar(2020, 4, 1, is_leap=True)  # 윤4월
 
 # 양력 → 음력
-year, month, day, is_leap = solar_to_lunar(date(1992, 8, 4))
+year, month, day, is_leap = bazi.solar_to_lunar(date(1992, 8, 4))
 ```
 
 ## 벡터 연산

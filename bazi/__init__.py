@@ -8,10 +8,12 @@ if TYPE_CHECKING:
 
 from ._config import get_lang, set_lang
 from ._engine import BaziChart, Pillar, bazi_vectorized as _bazi_vectorized
+from ._lunar import lunar_to_solar, solar_to_lunar
 
 __all__ = [
     "chart", "vectorized", "analyze",
     "set_lang", "get_lang",
+    "lunar_to_solar", "solar_to_lunar",
     "BaziChart", "Pillar",
 ]
 __version__ = "0.1.0"
