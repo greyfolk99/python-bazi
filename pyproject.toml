@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "python-bazi"
+version = "0.1.0"
+description = "Four Pillars of Destiny (BaZi / 사주팔자) engine — pure numpy, no lunar_python dependency"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+
+[project.urls]
+Repository = "https://github.com/hjseo/python-bazi"
+
+[tool.hatch.build.targets.wheel]
+packages = ["bazi"]
+include = ["bazi/_data/*.npz"]
