@@ -53,7 +53,7 @@ class BaziChart:
 
 class _BaziEngine:
     def __init__(self) -> None:
-        data = np.load(_DATA_DIR / "jieqi.npz")
+        data = np.load(_DATA_DIR / "jieqi_1800_2200_min.npz")
         self._jie_min: np.ndarray = data["min_arr"]
         self._jie_month: np.ndarray = data["month_idx"]
         self._jie_year: np.ndarray = data["year_arr"]
@@ -90,11 +90,24 @@ class _BaziEngine:
     def chart(
         self,
         dt: datetime,
-        longitude: float = 126.978,
-        timezone: str = "Asia/Seoul",
-        time_basis: str = "civil",
+        time_basis: str | None = None,
+        longitude: float | None = None,
+        timezone: str | None = None,
     ) -> BaziChart:
-        chart_dt = _true_solar_time(dt, longitude, timezone) if time_basis == "solar" else dt
+        if time_basis == "solar":
+            if longitude is None:
+                raise ValueError("longitude required for time_basis='solar'")
+            if timezone is None:
+                raise ValueError("timezone required for time_basis='solar'")
+            chart_dt = _true_solar_time(dt, longitude, timezone)
+        elif time_basis == "lunar":
+            from ._lunar import lunar_to_solar
+            solar_date = lunar_to_solar(dt.year, dt.month, dt.day)
+            chart_dt = dt.replace(year=solar_date.year, month=solar_date.month, day=solar_date.day)
+        elif time_basis is not None:
+            raise ValueError(f"unknown time_basis: {time_basis!r}. Use None, 'solar', or 'lunar'.")
+        else:
+            chart_dt = dt
 
         d_ord = np.array([date(chart_dt.year, chart_dt.month, chart_dt.day).toordinal()], dtype=np.int64)
         h_arr = np.array([chart_dt.hour], dtype=np.int64)
@@ -110,6 +123,7 @@ class _BaziEngine:
 
 def bazi_vectorized(dates_ordinal: np.ndarray, hours: np.ndarray) -> tuple[np.ndarray, ...]:
     return _engine().bazi_vectorized(dates_ordinal, hours)
+
 
 
 def _true_solar_time(dt: datetime, longitude: float, timezone: str) -> datetime:
