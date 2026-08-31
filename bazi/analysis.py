@@ -176,17 +176,17 @@ def _calc_dayun(
     forward = (year_yang and sex == "male") or (not year_yang and sex == "female")
 
     birth_ord = birth.toordinal()
-    birth_minute = (birth_ord - _EPOCH_ORD) * 1440
+    birth_sec = (birth_ord - _EPOCH_ORD) * 86400
 
-    pos = np.searchsorted(e._jie_min, np.array([birth_minute], dtype=np.int64), side="left") - 1
-    pos = int(np.clip(pos, 0, len(e._jie_min) - 2)[0])
+    pos = np.searchsorted(e._jie_sec, np.array([birth_sec], dtype=np.int64), side="right") - 1
+    pos = int(np.clip(pos, 0, len(e._jie_sec) - 2)[0])
 
     if forward:
-        jie_minute = int(e._jie_min[pos + 1])
+        jie_sec = int(e._jie_sec[pos + 1])
     else:
-        jie_minute = int(e._jie_min[pos])
+        jie_sec = int(e._jie_sec[pos])
 
-    days_to_jie = abs(jie_minute - birth_minute) // 1440
+    days_to_jie = abs(jie_sec - birth_sec) // 86400
     start_age = max(1, round(days_to_jie / 3))
 
     month_stem_idx = STEMS.index(chart.month.stem)

@@ -1,5 +1,6 @@
 """python-bazi CI 테스트."""
 from datetime import date, datetime
+from math import cos, pi, sin
 
 import pytest
 
@@ -33,6 +34,37 @@ def test_chart_solar_requires_longitude():
 def test_chart_unknown_time_basis():
     with pytest.raises(ValueError):
         bazi.chart(datetime(1992, 8, 4, 3, 30), time_basis="unknown")
+
+
+# (날짜, NOAA 균시차 분, 허용 오차 분)
+_EOT_CASES = [
+    (datetime(2000, 2, 12), -14.2, 1.0),
+    (datetime(2000, 5, 14),   3.7, 1.0),
+    (datetime(2000, 7, 26),  -6.5, 1.0),
+    (datetime(2000, 11,  3),  16.4, 1.0),
+]
+
+@pytest.mark.parametrize("dt,noaa_eot,tol", _EOT_CASES)
+def test_true_solar_time_eot(dt, noaa_eot, tol):
+    """균시차(EoT) 공식이 NOAA 기준값 ±1분 이내인지 확인."""
+    n = dt.timetuple().tm_yday
+    b = 2.0 * pi * (n - 81) / 364.0
+    eot = 9.87 * sin(2.0 * b) - 7.53 * cos(b) - 1.5 * sin(b)
+    assert abs(eot - noaa_eot) <= tol, f"{dt.date()}: eot={eot:.2f}분, NOAA={noaa_eot:.2f}분"
+
+
+def test_chart_solar_time_basis():
+    """진태양시 보정 결과가 공식 계산값과 일치하는지 확인."""
+    dt = datetime(1992, 8, 4, 3, 30)
+    from bazi._engine import _true_solar_time
+    corrected = _true_solar_time(dt, 127.0, "Asia/Seoul")
+    # 기댓값: 경도 보정(4 × (127-135)) + 균시차
+    n = dt.timetuple().tm_yday
+    b = 2.0 * pi * (n - 81) / 364.0
+    eot = 9.87 * sin(2.0 * b) - 7.53 * cos(b) - 1.5 * sin(b)
+    expected_delta_min = 4.0 * (127.0 - 135.0) + eot
+    actual_delta_min = (corrected - dt).total_seconds() / 60
+    assert abs(actual_delta_min - expected_delta_min) < 0.01
 
 
 # ── 음력 변환 ──────────────────────────────────────────────

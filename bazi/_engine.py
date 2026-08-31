@@ -59,8 +59,8 @@ class BaziChart:
 
 class _BaziEngine:
     def __init__(self) -> None:
-        data = np.load(_DATA_DIR / "jieqi_1800_2200_min.npz")
-        self._jie_min: np.ndarray = data["min_arr"]
+        data = np.load(_DATA_DIR / "jieqi_1800_2200_sec.npz")
+        self._jie_sec: np.ndarray = data["sec_arr"]
         self._jie_month: np.ndarray = data["month_idx"]
         self._jie_year: np.ndarray = data["year_arr"]
 
@@ -76,9 +76,9 @@ class _BaziEngine:
         day_gan_for_hour = np.where(next_day, (day_gan + 1) % 10, day_gan)
         hour_gan = (_DAY_GAN_TO_HOUR_BASE[day_gan_for_hour].astype(np.int64) + hour_zhi) % 10
 
-        dt_min = (dates_ord - _EPOCH_ORD) * 1440 + hours * 60
-        pos = np.searchsorted(self._jie_min, dt_min, side="left") - 1
-        pos = np.clip(pos, 0, len(self._jie_min) - 1)
+        dt_sec = (dates_ord - _EPOCH_ORD) * 86400 + hours * 3600
+        pos = np.searchsorted(self._jie_sec, dt_sec, side="right") - 1
+        pos = np.clip(pos, 0, len(self._jie_sec) - 1)
 
         month_seq = self._jie_month[pos].astype(np.int64)
         jy = self._jie_year[pos].astype(np.int64)
