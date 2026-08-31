@@ -7,6 +7,14 @@ if TYPE_CHECKING:
     import numpy as np
 
 from ._config import config
+from ._constants import (
+    STEMS, BRANCHES, ELEMENTS,
+    STEM_INDEX, BRANCH_INDEX, ELEMENT_INDEX,
+    STEM_ELEMENTS, BRANCH_ELEMENTS,
+    HIDDEN_STEMS,
+    STEM_COMBINATIONS, BRANCH_LIUHE, BRANCH_CLASH, BRANCH_HARM,
+    GENERATES, CONTROLS, CONTROLLED_BY,
+)
 from ._engine import BaziChart, Pillar, bazi_vectorized as _bazi_vectorized
 from ._lunar import lunar_to_solar, solar_to_lunar
 
@@ -15,6 +23,12 @@ __all__ = [
     "config",
     "lunar_to_solar", "solar_to_lunar",
     "BaziChart", "Pillar",
+    "STEMS", "BRANCHES", "ELEMENTS",
+    "STEM_INDEX", "BRANCH_INDEX", "ELEMENT_INDEX",
+    "STEM_ELEMENTS", "BRANCH_ELEMENTS",
+    "HIDDEN_STEMS",
+    "STEM_COMBINATIONS", "BRANCH_LIUHE", "BRANCH_CLASH", "BRANCH_HARM",
+    "GENERATES", "CONTROLS", "CONTROLLED_BY",
 ]
 __version__ = "0.2.0"
 

@@ -8,8 +8,7 @@ from zoneinfo import ZoneInfo
 
 import numpy as np
 
-STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
-BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+from ._constants import STEMS, BRANCHES  # noqa: E402
 
 _DATA_DIR = Path(__file__).parent / "_data"
 _EPOCH_ORD = date(1970, 1, 1).toordinal()
