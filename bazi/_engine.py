@@ -18,8 +18,10 @@ _BASE_GAN = 0
 _BASE_ZHI = 4
 
 _YIN_MONTH_GAN = np.array([2, 4, 6, 8, 0, 2, 4, 6, 8, 0], dtype=np.int8)
-_JIE_TO_MONTH_ZHI = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0], dtype=np.int8)
-_JIE_TO_MONTH_OFFSET = np.array([11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=np.int8)
+# mi=0=大雪(子月)·1=小寒(丑月)·2=立春(寅月)·...·11=立冬(亥月)
+_JIE_TO_MONTH_ZHI    = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], dtype=np.int8)
+# 寅月(mi=2) 기준 오프셋: 子=-2≡8, 丑=-1≡9, 寅=0, 卯=1, ...
+_JIE_TO_MONTH_OFFSET = np.array([8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=np.int8)
 _DAY_GAN_TO_HOUR_BASE = np.array([0, 2, 4, 6, 8, 0, 2, 4, 6, 8], dtype=np.int8)
 
 
@@ -81,15 +83,16 @@ class _BaziEngine:
         month_seq = self._jie_month[pos].astype(np.int64)
         jy = self._jie_year[pos].astype(np.int64)
         yg_base = (jy - 4) % 10
-        eff_yg = np.where(month_seq == 0, (yg_base - 1) % 10, yg_base)
-
-        month_gan = (_YIN_MONTH_GAN[eff_yg].astype(np.int64) + _JIE_TO_MONTH_OFFSET[month_seq]) % 10
+        # 年干支: 입춘(mi=2) 기준 — 大雪(mi=0)·小寒(mi=1)은 전년도 연주
+        year_yg = np.where(month_seq < 2, (yg_base - 1) % 10, yg_base)
+        # 月干: 절기 연도(jy) 그대로 (소한 이후부터 새해 오호둔 적용)
+        month_gan = (_YIN_MONTH_GAN[yg_base].astype(np.int64) + _JIE_TO_MONTH_OFFSET[month_seq]) % 10
         month_zhi = _JIE_TO_MONTH_ZHI[month_seq].astype(np.int64)
 
         year_zhi_base = (jy - 4) % 12
-        year_zhi = np.where(month_seq == 0, (year_zhi_base - 1) % 12, year_zhi_base)
+        year_zhi = np.where(month_seq < 2, (year_zhi_base - 1) % 12, year_zhi_base)
 
-        return eff_yg, year_zhi, month_gan, month_zhi, day_gan, day_zhi, hour_gan, hour_zhi
+        return year_yg, year_zhi, month_gan, month_zhi, day_gan, day_zhi, hour_gan, hour_zhi
 
     def chart(
         self,

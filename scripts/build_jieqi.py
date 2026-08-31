@@ -34,14 +34,14 @@ def build():
     seen_minutes: set[int] = set()
     entries: list[tuple[int, int, int]] = []  # (minutes, month_idx, year)
 
-    for year in range(START_YEAR, END_YEAR):
+    for year in range(START_YEAR - 1, END_YEAR):
         ly = LunarYear.fromYear(year)
         jd_list = ly.getJieQiJulianDays()
 
         for raw_i, jd in enumerate(jd_list):
             if raw_i % 2 != 0:
-                continue  # 홀수 = 중기, 건너뜀
-            month_idx = raw_i // 2  # 0~11 (또는 12이면 다음 연도 小寒 포함)
+                continue  # 홀수 = 기(氣/중기), 건너뜀. 짝수 = 절(節) 선택
+            month_idx = raw_i // 2  # 0~11: 大雪(0)·小寒(1)·立春(2)·...·立冬(11)
             if month_idx > 11:
                 continue
 
@@ -51,7 +51,7 @@ def build():
 
             d_ord = minutes // 1440 + _EPOCH_ORD
             d = date.fromordinal(d_ord)
-            if d.year < START_YEAR or d.year >= END_YEAR:
+            if d.year < START_YEAR - 1 or d.year >= END_YEAR:
                 continue
 
             seen_minutes.add(minutes)
