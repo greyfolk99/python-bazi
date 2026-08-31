@@ -11,12 +11,12 @@ from ._engine import BaziChart, Pillar, bazi_vectorized as _bazi_vectorized
 from ._lunar import lunar_to_solar, solar_to_lunar
 
 __all__ = [
-    "chart", "vectorized", "analyze",
+    "chart", "vectorized", "catalog", "analyze",
     "config",
     "lunar_to_solar", "solar_to_lunar",
     "BaziChart", "Pillar",
 ]
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 def chart(
@@ -54,6 +54,65 @@ def vectorized(dates_ordinal, hours):
         np.asarray(dates_ordinal, dtype=np.int64),
         np.asarray(hours, dtype=np.int64),
     )
+
+
+def catalog(
+    year_start: int,
+    year_end: int,
+    hours: tuple = (23, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21),
+) -> dict:
+    """연도 범위 + 시간 목록 → 사주 행렬 딕셔너리.
+
+    ground_truth 데이터에서 해당 연도 범위를 쿼리한다.
+
+    Args:
+        year_start: 시작 연도 (포함)
+        year_end:   끝 연도 (포함)
+        hours:      포함할 시간 목록 (기본: 12시주 대표시간)
+
+    Returns:
+        dict with numpy arrays:
+            years:      [N] int16
+            months:     [N] int8
+            days:       [N] int8
+            hours:      [N] int8
+            slot_index: [N] int8  (hours 인자 내 인덱스)
+            stems:      [N, 4] int8  (년간·월간·일간·시간)
+            branches:   [N, 4] int8  (년지·월지·일지·시지)
+    """
+    import numpy as np
+    from datetime import date
+    from pathlib import Path
+
+    data = np.load(Path(__file__).parent / "_data" / "ground_truth_1800_2200.npz", allow_pickle=False)
+    ordinals: np.ndarray = data["ordinals"]  # (N_days,) int32
+    bazi_raw: np.ndarray = data["bazi"]      # (N_days, 24, 8) int8
+
+    start_ord = date(year_start, 1, 1).toordinal()
+    end_ord = date(year_end + 1, 1, 1).toordinal()
+    mask = (ordinals >= start_ord) & (ordinals < end_ord)
+
+    sel_ord = ordinals[mask]
+    sel_bazi = bazi_raw[mask][:, list(hours), :]  # (M, S, 8)
+
+    M, S = len(sel_ord), len(hours)
+
+    epoch_ord = date(1970, 1, 1).toordinal()
+    dt64 = (sel_ord.astype(np.int64) - epoch_ord).astype("datetime64[D]")
+    year_arr  = (dt64.astype("datetime64[Y]").astype(np.int32) + 1970).astype(np.int16)
+    month_arr = ((dt64 - dt64.astype("datetime64[Y]")).astype("datetime64[M]").astype(np.int32) + 1).astype(np.int8)
+    day_arr   = ((dt64 - dt64.astype("datetime64[M]")).astype("datetime64[D]").astype(np.int32) + 1).astype(np.int8)
+
+    bazi_flat = sel_bazi.reshape(-1, 8)
+    return {
+        "years":      np.repeat(year_arr,  S),
+        "months":     np.repeat(month_arr, S),
+        "days":       np.repeat(day_arr,   S),
+        "hours":      np.tile(np.array(hours, dtype=np.int8), M),
+        "slot_index": np.tile(np.arange(S, dtype=np.int8), M),
+        "stems":      bazi_flat[:, [0, 2, 4, 6]].astype(np.int8),
+        "branches":   bazi_flat[:, [1, 3, 5, 7]].astype(np.int8),
+    }
 
 
 def analyze(chart: BaziChart, **kwargs):
