@@ -70,18 +70,24 @@ for dy in result.dayun:
 
 ## 언어 설정
 
-출력 언어를 전역으로 설정한다. 기본값은 한자(`zh`).
+`bazi.config.lang`으로 전역 설정한다. 기본값은 한자(`zh`).
 
 ```python
-bazi.set_lang('ko')   # 한국어: 비견, 겁재, 식신 ...
-bazi.set_lang('zh')   # 한자:   比肩, 劫財, 食神 ...
-bazi.set_lang('en')   # 영어:   Friend, Rob Wealth, Food God ...
+bazi.config.lang = 'ko'   # 한국어: 비견, 겁재, 식신 ...
+bazi.config.lang = 'zh'   # 한자:   比肩, 劫財, 食神 ...
+bazi.config.lang = 'en'   # 영어:   Friend, Rob Wealth, Food God ...
 ```
 
 환경변수로도 설정 가능:
 
 ```bash
 BAZI_LANG=ko python my_script.py
+```
+
+개별 호출에서 override:
+
+```python
+result = bazi.analyze(chart, lang='en')
 ```
 
 ## 음력 변환

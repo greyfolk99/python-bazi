@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import numpy as np
 
-from ._config import get_lang, set_lang
+from ._config import config
 from ._engine import BaziChart, Pillar, bazi_vectorized as _bazi_vectorized
 from ._lunar import lunar_to_solar, solar_to_lunar
 
 __all__ = [
     "chart", "vectorized", "analyze",
-    "set_lang", "get_lang",
+    "config",
     "lunar_to_solar", "solar_to_lunar",
     "BaziChart", "Pillar",
 ]
@@ -59,11 +59,11 @@ def vectorized(dates_ordinal, hours):
 def analyze(chart: BaziChart, **kwargs):
     """팔자 분석 → ChartAnalysis.
 
-    출력 언어: bazi.set_lang('ko') 또는 BAZI_LANG 환경변수 (기본 'zh')
+    출력 언어: bazi.config.lang 또는 BAZI_LANG 환경변수 (기본 'zh')
 
     Args:
         chart: BaziChart
-        school: 'traditional' | 'ziping' (기본 'traditional')
+        lang: 'zh'|'ko'|'en'. None이면 bazi.config.lang 사용.
         sex: 'male' | 'female' (대운 계산용)
         birth: datetime.date (대운 계산 시 필요)
         dayun_count: 대운 개수 (기본 8)
