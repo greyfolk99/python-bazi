@@ -54,12 +54,15 @@ chart = bazi.chart(
 ## 분석
 
 ```python
+bazi.config.lang = 'ko'  # 전역 언어 설정
+
 result = bazi.analyze(chart, sex='male', birth=date(1992, 8, 4))
+# lang= 으로 개별 override 가능: bazi.analyze(chart, lang='zh', ...)
 
 # 오행 분포
 print(result.elements.counts)   # {'木': 1, '火': 1, '土': 1, '金': 1, '水': 4}
 
-# 각 기둥 상세
+# 각 기둥 상세 (천간 십성 / 지지 십성)
 for key, p in result.pillars.items():
     print(f"{key}: {p.stem}{p.branch} ({p.stem_shi_shen}/{p.branch_shi_shen})")
 
@@ -93,9 +96,6 @@ result = bazi.analyze(chart, lang='en')
 ## 음력 변환
 
 ```python
-import bazi
-from datetime import date
-
 # 음력 → 양력
 solar = bazi.lunar_to_solar(1992, 7, 6)           # date(1992, 8, 4)
 solar = bazi.lunar_to_solar(2020, 4, 1, is_leap=True)  # 윤4월
