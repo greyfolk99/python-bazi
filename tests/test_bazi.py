@@ -178,3 +178,33 @@ def test_vectorized():
         day=bazi.Pillar(bazi._engine.STEMS[dg[0]], bazi._engine.BRANCHES[dz[0]]),
         hour=bazi.Pillar(bazi._engine.STEMS[hg[0]], bazi._engine.BRANCHES[hz[0]]),
     ) == bazi.chart(datetime(1992, 8, 4, 3, 30))
+
+
+def test_catalog_shape_and_dates():
+    import numpy as np
+
+    hours = (23, 1, 13)
+    cat = bazi.catalog(1990, 1990, hours=hours)
+    n_days = date(1990, 12, 31).toordinal() - date(1990, 1, 1).toordinal() + 1
+    assert n_days == 365
+    assert len(cat["years"]) == n_days * len(hours)
+    assert cat["stems"].shape == (n_days * len(hours), 4)
+    assert cat["branches"].shape == (n_days * len(hours), 4)
+    assert set(np.unique(cat["years"]).tolist()) == {1990}
+    assert set(np.unique(cat["months"]).tolist()) == set(range(1, 13))
+    assert cat["days"].min() == 1 and cat["days"].max() == 31
+    assert set(np.unique(cat["hours"]).tolist()) == set(hours)
+
+
+def test_catalog_matches_chart():
+    """동적 catalog가 chart()와 팔자 4주 모두 일치 (ground_truth 없이)."""
+    import numpy as np
+
+    cat = bazi.catalog(1992, 1992, hours=(3,))
+    mask = (cat["months"] == 8) & (cat["days"] == 4) & (cat["hours"] == 3)
+    i = int(np.where(mask)[0][0])
+    c = bazi.chart(datetime(1992, 8, 4, 3, 30))
+    pillars = [c.year, c.month, c.day, c.hour]
+    for j, p in enumerate(pillars):
+        assert bazi.STEMS[cat["stems"][i][j]] == p.stem
+        assert bazi.BRANCHES[cat["branches"][i][j]] == p.branch

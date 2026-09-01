@@ -6,6 +6,8 @@ build-backend = "hatchling.build"
 name = "fate-py"
 version = "0.2.1"
 description = "Four Pillars of Destiny (BaZi / 사주팔자) engine — pure numpy"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 

@@ -30,7 +30,7 @@ __all__ = [
     "STEM_COMBINATIONS", "BRANCH_LIUHE", "BRANCH_CLASH", "BRANCH_HARM",
     "GENERATES", "CONTROLS", "CONTROLLED_BY",
 ]
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 def chart(
@@ -77,7 +77,7 @@ def catalog(
 ) -> dict:
     """연도 범위 + 시간 목록 → 사주 행렬 딕셔너리.
 
-    ground_truth 데이터에서 해당 연도 범위를 쿼리한다.
+    절기 기반 동적 계산으로 팔자를 산출한다 (사전 계산 데이터 불필요).
 
     Args:
         year_start: 시작 연도 (포함)
@@ -96,36 +96,39 @@ def catalog(
     """
     import numpy as np
     from datetime import date
-    from pathlib import Path
 
-    data = np.load(Path(__file__).parent / "_data" / "ground_truth_1800_2200.npz", allow_pickle=False)
-    ordinals: np.ndarray = data["ordinals"]  # (N_days,) int32
-    bazi_raw: np.ndarray = data["bazi"]      # (N_days, 24, 8) int8
+    from ._engine import _engine
 
     start_ord = date(year_start, 1, 1).toordinal()
-    end_ord = date(year_end + 1, 1, 1).toordinal()
-    mask = (ordinals >= start_ord) & (ordinals < end_ord)
+    end_ord = date(year_end, 12, 31).toordinal()
+    ordinals = np.arange(start_ord, end_ord + 1, dtype=np.int64)  # (M,) 포함 범위
 
-    sel_ord = ordinals[mask]
-    sel_bazi = bazi_raw[mask][:, list(hours), :]  # (M, S, 8)
+    hours_arr = np.asarray(hours, dtype=np.int64)
+    M, S = len(ordinals), len(hours_arr)
 
-    M, S = len(sel_ord), len(hours)
+    # (M, S) 격자 → 평탄화. day-major, hour-minor 순서 (slot_index와 정합).
+    days_grid = np.repeat(ordinals, S)          # [M*S]
+    hours_grid = np.tile(hours_arr, M)          # [M*S]
+
+    yg, yz, mg, mz, dg, dz, hg, hz = _engine().bazi_vectorized(days_grid, hours_grid)
+    stems = np.stack([yg, mg, dg, hg], axis=1).astype(np.int8)      # [M*S, 4]
+    branches = np.stack([yz, mz, dz, hz], axis=1).astype(np.int8)   # [M*S, 4]
 
     epoch_ord = date(1970, 1, 1).toordinal()
-    dt64 = (sel_ord.astype(np.int64) - epoch_ord).astype("datetime64[D]")
+    dt64 = (ordinals - epoch_ord).astype("datetime64[D]")
+    months_since_epoch = dt64.astype("datetime64[M]")
     year_arr  = (dt64.astype("datetime64[Y]").astype(np.int32) + 1970).astype(np.int16)
-    month_arr = ((dt64 - dt64.astype("datetime64[Y]")).astype("datetime64[M]").astype(np.int32) + 1).astype(np.int8)
-    day_arr   = ((dt64 - dt64.astype("datetime64[M]")).astype("datetime64[D]").astype(np.int32) + 1).astype(np.int8)
+    month_arr = (months_since_epoch.astype(np.int32) % 12 + 1).astype(np.int8)
+    day_arr   = ((dt64 - months_since_epoch).astype("timedelta64[D]").astype(np.int32) + 1).astype(np.int8)
 
-    bazi_flat = sel_bazi.reshape(-1, 8)
     return {
         "years":      np.repeat(year_arr,  S),
         "months":     np.repeat(month_arr, S),
         "days":       np.repeat(day_arr,   S),
-        "hours":      np.tile(np.array(hours, dtype=np.int8), M),
+        "hours":      np.tile(hours_arr.astype(np.int8), M),
         "slot_index": np.tile(np.arange(S, dtype=np.int8), M),
-        "stems":      bazi_flat[:, [0, 2, 4, 6]].astype(np.int8),
-        "branches":   bazi_flat[:, [1, 3, 5, 7]].astype(np.int8),
+        "stems":      stems,
+        "branches":   branches,
     }
 
 
